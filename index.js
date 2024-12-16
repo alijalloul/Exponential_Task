@@ -9,8 +9,15 @@ dotenv.config();
 const app = express();
 const prisma = new PrismaClient();
 
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
+bot.setWebHook(`${process.env.SERVER_URL}/bot${process.env.TELEGRAM_TOKEN}`);
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+app.post(`/bot${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
 
 const conversationState = new Map();
 
