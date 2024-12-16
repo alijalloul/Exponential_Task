@@ -15,6 +15,7 @@ bot.setWebHook(process.env.SERVER_URL + bot.token);
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
+  console.log("Webhook received:", req.body);
   bot.processUpdate(req.body);
   res.status(200).json({ message: "ok" });
 });
@@ -112,8 +113,8 @@ bot.on("message", async (msg) => {
     console.error("Error:", err);
     bot.sendMessage(chatId, "Something went wrong. Please try again later.");
   }
+});
 
-  bot.on("polling_error", (error) => {
-    console.error("Polling error:", error);
-  });
+bot.on("polling_error", (error) => {
+  console.error("Polling error:", error);
 });
