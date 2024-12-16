@@ -105,4 +105,8 @@ bot.on("message", async (msg) => {
     console.error("Error:", err);
     bot.sendMessage(chatId, "Something went wrong. Please try again later.");
   }
+
+  bot.on("polling_error", (error) => {
+    console.error("Polling error:", error.code, error.response.body);
+  });
 });
