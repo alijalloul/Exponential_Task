@@ -8,11 +8,11 @@ dotenv.config();
 
 const app = express();
 const prisma = new PrismaClient();
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
-bot.setWebHook(process.env.SERVER_URL + bot.token);
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+bot.setWebHook(process.env.SERVER_URL + bot.token);
 
 app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
   console.log("Webhook received:", req.body);
@@ -22,14 +22,8 @@ app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
 
 const conversationState = new Map();
 
-app.get("/", (req, res) => {
-  res.send("Bot is running!");
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 bot.on("message", async (msg) => {
+  console.log("Message received:", msg.text); // Debugging log
   const chatId = msg.chat.id;
   const text = msg.text?.trim().toLowerCase();
 
@@ -52,7 +46,9 @@ bot.on("message", async (msg) => {
       case "start":
         botReply = "Hi there! Are you looking for a health insurance plan?";
         conversationState.set(chatId, "asking_family_size");
-        break;
+        await bot.sendMessage(chatId, botReply);
+        return;
+
       case "asking_family_size":
         if (text.includes("yes")) {
           botReply = "Great! Let's start. What's your family size?";
@@ -61,7 +57,9 @@ bot.on("message", async (msg) => {
           botReply = "Alright, feel free to ask me anything else!";
           conversationState.delete(chatId);
         }
-        break;
+        await bot.sendMessage(chatId, botReply);
+        return;
+
       case "asking_income":
         if (text.match(/^\d+$/)) {
           botReply = "Thanks! What's your household income?";
@@ -69,7 +67,9 @@ bot.on("message", async (msg) => {
         } else {
           botReply = "Could you please provide your family size in numbers?";
         }
-        break;
+        await bot.sendMessage(chatId, botReply);
+        return;
+
       case "asking_gender":
         if (text.match(/^\d+$/)) {
           botReply =
@@ -78,7 +78,9 @@ bot.on("message", async (msg) => {
         } else {
           botReply = "Please provide your household income in numbers.";
         }
-        break;
+        await bot.sendMessage(chatId, botReply);
+        return;
+
       case "complete":
         if (["male", "female", "other"].includes(text)) {
           botReply =
@@ -87,7 +89,9 @@ bot.on("message", async (msg) => {
         } else {
           botReply = "Please specify your gender as male, female, or other.";
         }
-        break;
+        await bot.sendMessage(chatId, botReply);
+        return;
+
       default:
         const res = await openai.chat.completions.create({
           model: "gpt-3.5-turbo",
@@ -98,20 +102,17 @@ bot.on("message", async (msg) => {
         });
         botReply =
           res.choices[0]?.message?.content || "I'm here to assist you!";
-        break;
+        conversationState.delete(chatId); // Reset state for unrelated queries
+        await bot.sendMessage(chatId, botReply);
+        return;
     }
-
-    await prisma.message.createMany({
-      data: [
-        { role: "user", content: text, conversationId: conversation.id },
-        { role: "bot", content: botReply, conversationId: conversation.id },
-      ],
-    });
-
-    bot.sendMessage(chatId, botReply);
   } catch (err) {
     console.error("Error:", err);
-    bot.sendMessage(chatId, "Something went wrong. Please try again later.");
+    await bot.sendMessage(
+      chatId,
+      "Something went wrong. Please try again later."
+    );
+    return;
   }
 });
 
