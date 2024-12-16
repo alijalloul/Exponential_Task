@@ -12,7 +12,7 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
 
-bot.setWebHook(process.env.SERVER_URL + bot.token);
+bot.setWebHook(process.env.SERVER_URL + process.env.TELEGRAM_TOKEN);
 
 app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
   console.log("Webhook received:", req.body);
@@ -23,7 +23,7 @@ app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
 const conversationState = new Map();
 
 bot.on("message", async (msg) => {
-  console.log("Message received:", msg.text); // Debugging log
+  console.log("Message received:", msg.text);
   const chatId = msg.chat.id;
   const text = msg.text?.trim().toLowerCase();
 
