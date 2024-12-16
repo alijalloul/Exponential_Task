@@ -10,16 +10,15 @@ datasource db {
 model Conversation {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   userId    String    @unique
-  messages  Message[]
+  messages  Message[] @relation("ConversationMessages")
   createdAt DateTime  @default(now())
 }
 
 model Message {
-  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
   role           String
   content        String
-  timestamp      DateTime      @default(now())
-  convoId        String        @db.ObjectId
-  Conversation   Conversation? @relation(fields: [conversationId], references: [id])
-  conversationId String?       @db.ObjectId
+  timestamp      DateTime     @default(now())
+  conversationId String       @db.ObjectId
+  Conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
 }
