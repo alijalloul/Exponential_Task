@@ -10,6 +10,14 @@ const app = express();
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+app.get("/", (req, res) => {
+  res.send("Bot is running!");
+});
+
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, {
   polling: process.env.NODE_ENV !== "production",
 });
