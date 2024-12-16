@@ -10,16 +10,21 @@ const app = express();
 const prisma = new PrismaClient();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
-
-bot.setWebHook(process.env.SERVER_URL + process.env.TELEGRAM_TOKEN);
-
-app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
-  console.log("Webhook received:", req.body);
-  bot.processUpdate(req.body);
-  res.status(200).json({ message: "ok" });
+const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, {
+  polling: process.env.NODE_ENV !== "production",
 });
 
+if (process.env.NODE_ENV === "production") {
+  bot.setWebHook(process.env.SERVER_URL + process.env.TELEGRAM_TOKEN);
+
+  app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
+    console.log("Webhook received:", req.body);
+    bot.processUpdate(req.body);
+    res.status(200).json({ message: "ok" });
+  });
+} else {
+  console.log("Bot is running in development mode with polling.");
+}
 const conversationState = new Map();
 
 bot.on("message", async (msg) => {
