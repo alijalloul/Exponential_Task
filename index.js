@@ -29,8 +29,15 @@ if (process.env.NODE_ENV === "production") {
 
   app.post(`/${process.env.TELEGRAM_TOKEN}`, express.json(), (req, res) => {
     console.log("Webhook received:", req.body);
-    bot.processUpdate(req.body);
-    res.status(200).json({ message: "ok" });
+
+    try {
+      bot.processUpdate(req.body);
+      console.log("Update processed successfully");
+      res.status(200).json({ message: "ok" });
+    } catch (err) {
+      console.error("Error processing update:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
   });
 } else {
   console.log("Bot is running in development mode with polling.");
