@@ -25,6 +25,7 @@ if (process.env.NODE_ENV === "production") {
 } else {
   console.log("Bot is running in development mode with polling.");
 }
+
 const conversationState = new Map();
 
 bot.on("message", async (msg) => {
