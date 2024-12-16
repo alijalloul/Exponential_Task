@@ -103,8 +103,8 @@ bot.on("message", async (msg) => {
 
     await prisma.message.createMany({
       data: [
-        { role: "user", content: text, convoId: conversation.id },
-        { role: "bot", content: botReply, convoId: conversation.id },
+        { role: "user", content: text, conversationId: conversation.id },
+        { role: "bot", content: botReply, conversationId: conversation.id },
       ],
     });
 
